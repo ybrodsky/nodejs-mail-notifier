@@ -72,12 +72,15 @@ Notifier.prototype.scan = function () {
         }
         if (!seachResults || seachResults.length === 0) {
             dbg('no new mail in %s', self.options.box);
+            self.emit('end');
             return;
         }
         dbg('found %d new messages', seachResults.length);
         var fetch = self.imap.fetch(seachResults, {
             markSeen: self.options.markSeen !== false,
             bodies: ''
+        });
+        self.imap.addFlags(seachResults, "Flagged", function(err) {
         });
         fetch.on('message', function (msg) {
             var mp = new MailParser();
@@ -90,6 +93,7 @@ Notifier.prototype.scan = function () {
         });
         fetch.once('end', function () {
             dbg('Done fetching all messages!');
+            self.emit('end');
         });
         fetch.once('error', function (err) {
             dbg('fetch error : ', err);
